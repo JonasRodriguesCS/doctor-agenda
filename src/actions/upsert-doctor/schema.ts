@@ -6,7 +6,7 @@ export const upsertDoctorSchema = z
     name: z.string().trim().min(1, {
       message: "Nome é obrigatório.",
     }),
-    specialty: z.string().trim().min(1, {
+    speciality: z.string().trim().min(1, {
       message: "Especialidade é obrigatória.",
     }),
     appointmentPriceInCents: z.number().min(1, {
