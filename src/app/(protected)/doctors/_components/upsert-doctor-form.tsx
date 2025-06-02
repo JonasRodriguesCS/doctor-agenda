@@ -17,7 +17,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -117,7 +116,9 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
           {doctor ? "Editar médico" : "Adicionar médico"}
         </DialogTitle>
         <DialogDescription>
-          {doctor ? "Edite as informações do médico." : "Adicione um novo médico."}
+          {doctor
+            ? "Edite as informações do médico."
+            : "Adicione um novo médico."}
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -383,12 +384,12 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
             )}
           />
           <DialogFooter>
-            <Button type="submit" disabled={upsertDoctorAction.isPending}>
+          <Button type="submit" disabled={upsertDoctorAction.isPending}>
               {upsertDoctorAction.isPending
                 ? "Salvando..."
                 : doctor
-                ? "Salvar alterações"
-                : "Adicionar"}
+                  ? "Salvar"
+                  : "Adicionar"}
             </Button>
           </DialogFooter>
         </form>
