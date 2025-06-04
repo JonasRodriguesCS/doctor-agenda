@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { and, count, desc, eq, gte, lte, sql, sum } from "drizzle-orm";
+//import { and, count, desc, eq, gte, lte, sql, sum } from "drizzle-orm";
 import { Calendar } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -15,8 +15,7 @@ import {
   PageTitle,
 } from "@/components/ui/page-conteiner";
 import { PageContainer } from "@/components/ui/page-conteiner";
-import { db } from "@/db";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { getDashboard } from "@/data/get-dashboard";
 import { auth } from "@/lib/auth";
 
 import { appointmentsTableColumns } from "../appointments/_components/table-columns";
@@ -25,7 +24,6 @@ import { DatePicker } from "./_components/date-picker";
 import StatsCards from "./_components/stats-cards";
 import TopDoctors from "./_components/top-doctors";
 import TopSpecialties from "./_components/top-specialties";
-
 interface DashboardPageProps {
   searchParams: Promise<{
     from: string;
@@ -49,123 +47,26 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
       `/dashboard?from=${dayjs().format("YYYY-MM-DD")}&to=${dayjs().add(1, "month").format("YYYY-MM-DD")}`,
     );
   }
-  const [
-    [totalRevenue],
-    [totalAppointments],
-    [totalPatients],
-    [totalDoctors],
+  const {
+    totalRevenue,
+    totalAppointments,
+    totalPatients,
+    totalDoctors,
     topDoctors,
     topSpecialties,
     todayAppointments,
-  ] = await Promise.all([
-    db
-      .select({
-        total: sum(appointmentsTable.appointmentPriceInCents),
-      })
-      .from(appointmentsTable)
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      ),
-    db
-      .select({
-        total: count(),
-      })
-      .from(appointmentsTable)
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      ),
-    db
-      .select({
-        total: count(),
-      })
-      .from(patientsTable)
-      .where(eq(patientsTable.clinicId, session.user.clinic.id)),
-    db
-      .select({
-        total: count(),
-      })
-      .from(doctorsTable)
-      .where(eq(doctorsTable.clinicId, session.user.clinic.id)),
-    db
-      .select({
-        id: doctorsTable.id,
-        name: doctorsTable.name,
-        avatarImageUrl: doctorsTable.avatarImageUrl,
-        speciality: doctorsTable.speciality,
-        appointments: count(appointmentsTable.id),
-      })
-      .from(doctorsTable)
-      .leftJoin(
-        appointmentsTable,
-        and(
-          eq(appointmentsTable.doctorId, doctorsTable.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      )
-      .where(eq(doctorsTable.clinicId, session.user.clinic.id))
-      .groupBy(doctorsTable.id)
-      .orderBy(desc(count(appointmentsTable.id)))
-      .limit(10),
-    db
-      .select({
-        speciality: doctorsTable.speciality,
-        appointments: count(appointmentsTable.id),
-      })
-      .from(appointmentsTable)
-      .innerJoin(doctorsTable, eq(appointmentsTable.doctorId, doctorsTable.id))
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.date, new Date(from)),
-          lte(appointmentsTable.date, new Date(to)),
-        ),
-      )
-      .groupBy(doctorsTable.speciality)
-      .orderBy(desc(count(appointmentsTable.id))),
-    db.query.appointmentsTable.findMany({
-      where: and(
-        eq(appointmentsTable.clinicId, session.user.clinic.id),
-        gte(appointmentsTable.date, new Date()),
-        lte(appointmentsTable.date, new Date()),
-      ),
-      with: {
-        patient: true,
-        doctor: true,
+    dailyAppointmentsData,
+  } = await getDashboard({
+    from,
+    to,
+    session: {
+      user: {
+        clinic: {
+          id: session.user.clinic.id,
+        },
       },
-    }),
-  ]);
-
-  const chartStartDate = dayjs().subtract(10, "days").startOf("day").toDate();
-  const chartEndDate = dayjs().add(10, "days").endOf("day").toDate();
-
-  const dailyAppointmentsData = await db
-    .select({
-      date: sql<string>`DATE(${appointmentsTable.date})`.as("date"),
-      appointments: count(appointmentsTable.id),
-      revenue:
-        sql<number>`COALESCE(SUM(${appointmentsTable.appointmentPriceInCents}), 0)`.as(
-          "revenue",
-        ),
-    })
-    .from(appointmentsTable)
-    .where(
-      and(
-        eq(appointmentsTable.clinicId, session.user.clinic.id),
-        gte(appointmentsTable.date, chartStartDate),
-        lte(appointmentsTable.date, chartEndDate),
-      ),
-    )
-    .groupBy(sql`DATE(${appointmentsTable.date})`)
-    .orderBy(sql`DATE(${appointmentsTable.date})`);
+    },
+  });
 
   return (
     <PageContainer>
