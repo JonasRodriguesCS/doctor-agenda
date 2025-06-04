@@ -60,7 +60,24 @@ const AppointmentsPage = async () => {
         </PageActions>
       </PageHeader>
       <PageContent>
-        <DataTable data={appointments} columns={appointmentsTableColumns} />
+        <DataTable 
+          data={appointments.map(appointment => ({
+            ...appointment,
+            patient: {
+              id: appointment.patient.id,
+              name: appointment.patient.name,
+              email: appointment.patient.email,
+              phoneNumber: appointment.patient.phoneNumber,
+              sex: appointment.patient.sex === "other" ? "male" : appointment.patient.sex
+            },
+            doctor: {
+              id: appointment.doctor.id,
+              name: appointment.doctor.name,
+              specialty: appointment.doctor.speciality
+            }
+          }))} 
+          columns={appointmentsTableColumns} 
+        />
       </PageContent>
     </PageContainer>
   );
