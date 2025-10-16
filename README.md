@@ -114,10 +114,6 @@ src/
 | `STRIPE_WEBHOOK_SECRET`     | Não         | Segredo para webhooks do Stripe               |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Não | Chave pública do Stripe (frontend)     |
 
-## 📝 Licença
-
-Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
 ## 🤝 Contribuição
 
 Contribuições são sempre bem-vindas! Siga estes passos:
